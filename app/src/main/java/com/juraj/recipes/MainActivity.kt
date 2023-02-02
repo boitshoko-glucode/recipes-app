@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight.Companion.Medium
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.ProvideWindowInsets
@@ -187,13 +185,22 @@ fun CircularButton(
 
 @Composable
 fun Content(recipe: Recipe, scrollState: LazyListState) {
+    var selectedTab by remember {
+        mutableStateOf("Ingredients")
+    }
     LazyColumn(contentPadding = PaddingValues(top = AppBarExpendedHeight), state = scrollState) {
         item {
             BasicInfo(recipe)
             Description(recipe)
             ServingCalculator()
-            IngredientsHeader()
-            IngredientsList(recipe)
+            IngredientsHeader (selected = selectedTab) {
+                selectedTab = it
+            }
+            when (selectedTab) {
+                "Ingredients" -> IngredientsList(recipe)
+                "Tools" -> Text(text = "Tools", modifier = Modifier.padding(8.dp))
+                "Steps" -> Text(text = "Steps", modifier = Modifier.padding(8.dp))
+            }
             ShoppingListButton()
             Reviews(recipe)
             Images()
@@ -331,7 +338,7 @@ fun IngredientCard(
 }
 
 @Composable
-fun IngredientsHeader() {
+fun IngredientsHeader(selected: String, onTabSelected: (String) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -341,16 +348,23 @@ fun IngredientsHeader() {
             .fillMaxWidth()
             .height(44.dp)
     ) {
-        TabButton("Ingredients", true, Modifier.weight(1f))
-        TabButton("Tools", false, Modifier.weight(1f))
-        TabButton("Steps", false, Modifier.weight(1f))
+
+        TabButton("Ingredients", selected == "Ingredients", Modifier.weight(1f)){
+            onTabSelected(it)
+        }
+        TabButton("Tools", selected == "Tools", Modifier.weight(1f)) {
+            onTabSelected(it)
+        }
+        TabButton("Steps", selected == "Steps", Modifier.weight(1f)) {
+            onTabSelected(it)
+        }
     }
 }
 
 @Composable
-fun TabButton(text: String, active: Boolean, modifier: Modifier) {
+fun TabButton(text: String, active: Boolean, modifier: Modifier, onTabSelected: (String) -> Unit) {
     Button(
-        onClick = { /*TODO*/ },
+        onClick = { onTabSelected(text) },
         shape = Shapes.medium,
         modifier = modifier.fillMaxHeight(),
         elevation = null,
